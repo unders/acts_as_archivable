@@ -1,0 +1,23 @@
+comment_1:
+    id: 1
+    entry_id: 1
+    body: 'Comment!'
+    replied_on: '2006-10-02 12:00:00'    
+
+comment_2:
+    id: 2
+    entry_id: 1
+    body: 'Comment!'
+    replied_on: '2006-10-03 12:00:00'
+
+comment_3:
+    id: 3
+    entry_id: 1
+    body: 'Comment!'
+    replied_on: '2006-11-01 12:00:00'
+
+comment_4:
+    id: 4
+    entry_id: 1
+    body: 'Comment!'
+    replied_on: '2007-10-02 12:00:00'
