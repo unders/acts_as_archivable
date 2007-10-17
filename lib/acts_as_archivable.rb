@@ -27,12 +27,15 @@ module Shooter
 
         module ClassMethods
           def by_date(by_date, options ={})
-            find(:all, 
-              options.merge(:conditions => initial_conditions(by_date), :order => order))
+            with_scope(:find => {:conditions => initial_conditions(by_date), :order => order}) do
+              find :all, options
+            end
           end
 
           def count_by_date(by_date, options = {})
-            count(options.merge(:conditions => initial_conditions(by_date)))
+            with_scope(:find => {:conditions => initial_conditions(by_date)}) do
+              count(options)
+            end
           end
 
           def oldest(options = {})
@@ -44,21 +47,27 @@ module Shooter
           end
 
           def recent(days = 365, options = {})
-            find(:all, 
-              options.merge(:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -days)], :order => order))
+            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -days)], :order => order}) do
+              find :all, options
+            end
           end
 
           def count_recent(days = 365, options = {})
-            count(options.merge(:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -days)]))
+            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -days)]}) do
+              count(options)
+            end
           end
 
           def between(start_date, end_date, options = {})
-            find(:all,
-              options.merge(:conditions => between_conditions(start_date, end_date), :order => order))
+            with_scope(:find => {:conditions => between_conditions(start_date, end_date), :order => order}) do
+              find :all, options
+            end            
           end
 
           def count_between(start_date, end_date, options = {})
-            count(options.merge(:conditions => between_conditions(start_date, end_date)))
+            with_scope(:find => {:conditions => between_conditions(start_date, end_date)}) do
+              count(options)
+            end
           end
 
           private
