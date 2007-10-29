@@ -46,14 +46,14 @@ module Shooter
             find(:first, options.merge(:order => "#{table_name}.#{archivable_attribute} DESC"))
           end
 
-          def recent(days = 365, options = {})
-            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -days)], :order => order}) do
+          def recent(length_of_time = 1.year, options = {})
+            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -length_of_time.to_days)], :order => order}) do
               find :all, options
             end
           end
 
-          def count_recent(days = 365, options = {})
-            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -days)]}) do
+          def count_recent(length_of_time = 1.year, options = {})
+            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -length_of_time.to_days)]}) do
               count(options)
             end
           end
@@ -73,7 +73,7 @@ module Shooter
           private
 
           def initial_conditions(by_date)
-            by_date = Date.parse(by_date) if by_date.is_a?(String)
+            by_date = simple_parse by_date
 
             year, month, day = (by_date[:year] rescue nil) || (by_date.year rescue nil), (by_date[:month] rescue nil) || (by_date.month rescue nil), (by_date[:day] rescue nil) || (by_date.day rescue nil)
             condition_str = [] << "year(#{table_name}.#{archivable_attribute}) = ?"
@@ -83,16 +83,34 @@ module Shooter
           end
 
           def between_conditions(start_date, end_date)
-            start_date = Date.parse(start_date) if start_date.is_a?(String)
-            end_date = Date.parse(end_date) if end_date.is_a?(String)
+            start_date = simple_parse start_date
+            end_date = simple_parse end_date
             ["#{table_name}.#{archivable_attribute} BETWEEN ? AND ?", start_date, end_date]
           end
 
           def order
             "#{table_name}.#{archivable_attribute} #{sort_order}"
           end
+          
+          def simple_parse(date)
+            type = date.class.to_s
+            case type
+            when 'String'
+              Date.parse(date)
+            when 'Time'
+              date.to_date
+            else
+              date
+            end
+          end
         end
       end
     end
+  end
+end
+
+class Integer
+  def to_days
+    self/60/60/24
   end
 end
