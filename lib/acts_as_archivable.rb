@@ -1,11 +1,43 @@
-module Shooter
-  module Acts
+module Shooter #:nodoc:
+  module Acts #:nodoc:
+    # This is to be used on ActiveRecord models as such (also used in the tests):
+    # 
+    #   class Entry < ActiveRecord::Base
+    #     acts_as_archivable :order => 'DESC'
+    #     has_many  :comments, :dependent => :destroy
+    #   end
+    # 
+    #   class Comment < ActiveRecord::Base
+    #     acts_as_archivable :on => :replied_on
+    #     belongs_to  :entry
+    #   end
+    # 
+    # From here, you have quick access to records related to date.
+    # 
+    #   Entry.by_date :year => 2007
+    #   Entry.by_date Date.today
+    #   Entry.by_date '5/1/2007'
+    # 
+    #   Entry.oldest
+    #   Entry.newest
+    # 
+    #   Entry.recent 2.weeks
+    #   Entry.recent 3.months
+    #   Entry.recent (3.months - 1.week)
+    # 
+    #   Entry.between '5/10/2007', Date.today
+    
     module Archivable
-      def self.included(base)
+      def self.included(base) #:nodoc:
         base.extend ClassMethods
       end
 
       module ClassMethods
+        # == Configuration Options
+        # 
+        # * <tt>on</tt> - attribute on the model that will be referenced for all queries (default: created_at)
+        # * <tt>order</tt> - default order that results will be returned (default: ASC)
+        
         def acts_as_archivable(options = {})
           unless archivable?
             cattr_accessor :archivable_attribute, :sort_order

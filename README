@@ -5,32 +5,4 @@ ActsAsArchivable is a collection of methods that I found myself using quite a bi
 to models with time-stamped columns.  Initial things were blog entries in regards to archives, 
 but I found that I was using these more and more in various ways throughout many models.
 
-All methods have the count_* available as well instead of counting the items returned in the 
-array.
-
-This is to be used on ActiveRecord models as such (also used in the tests):
-
-class Entry < ActiveRecord::Base
-  acts_as_archivable :order => 'DESC'
-  has_many  :comments, :dependent => :destroy
-end
-
-class Comment < ActiveRecord::Base
-  acts_as_archivable :on => :replied_on
-  belongs_to  :entry
-end
-
-From here, you have quick access to records related to date.
-
-Entry.by_date :year => 2007
-Entry.by_date Date.today
-Entry.by_date '5/1/2007'
-
-Entry.oldest
-Entry.newest
-
-Entry.recent 2.weeks
-Entry.recent 3.months
-Entry.recent (3.months - 1.week)
-
-Entry.between '5/10/2007', Date.today
+This library requires ActiveRecord.
