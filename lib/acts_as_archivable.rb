@@ -60,7 +60,7 @@ module Shooter #:nodoc:
         module ClassMethods
           def by_date(by_date, options ={})
             with_scope(:find => {:conditions => initial_conditions(by_date), :order => order}) do
-              find :all, options
+              block_given? ? yield(options) : find(:all, options)
             end
           end
 
@@ -80,7 +80,7 @@ module Shooter #:nodoc:
 
           def recent(length_of_time = 1.year, options = {})
             with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -length_of_time.to_days)], :order => order}) do
-              find :all, options
+              block_given? ? yield(options) : find(:all, options)
             end
           end
 
@@ -92,8 +92,8 @@ module Shooter #:nodoc:
 
           def between(start_date, end_date, options = {})
             with_scope(:find => {:conditions => between_conditions(start_date, end_date), :order => order}) do
-              find :all, options
-            end            
+              block_given? ? yield(options) : find(:all, options)
+            end
           end
 
           def count_between(start_date, end_date, options = {})
@@ -115,8 +115,7 @@ module Shooter #:nodoc:
           end
 
           def between_conditions(start_date, end_date)
-            start_date = simple_parse start_date
-            end_date = simple_parse end_date
+            start_date, end_date = simple_parse(start_date), simple_parse(end_date)
             ["#{table_name}.#{archivable_attribute} BETWEEN ? AND ?", start_date, end_date]
           end
 
