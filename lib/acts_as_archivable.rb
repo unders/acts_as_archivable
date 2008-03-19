@@ -71,21 +71,21 @@ module Shooter #:nodoc:
           end
 
           def oldest(options = {})
-            find(:first, options.merge(:order => "#{table_name}.#{archivable_attribute} DESC"))
-          end
-
-          def newest(options = {})
             find(:first, options.merge(:order => "#{table_name}.#{archivable_attribute} ASC"))
           end
 
+          def newest(options = {})
+            find(:first, options.merge(:order => "#{table_name}.#{archivable_attribute} DESC"))
+          end
+
           def recent(length_of_time = 1.year, options = {})
-            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -length_of_time.to_days)], :order => order}) do
+            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -length_of_time.to_days)], :order => "#{table_name}.#{archivable_attribute} DESC"}) do
               block_given? ? yield(options) : find(:all, options)
             end
           end
 
           def count_recent(length_of_time = 1.year, options = {})
-            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -length_of_time.to_days)]}) do
+            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -length_of_time.to_days)], :order => "#{table_name}.#{archivable_attribute} DESC"}) do
               count(options)
             end
           end
