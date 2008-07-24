@@ -55,21 +55,36 @@ module Shooter #:nodoc:
       module InstanceMethods
         def self.included(base)
           base.extend ClassMethods
+          if base.respond_to?(:named_scope)
+            base.named_scope :by_date, lambda {|by_date| { :conditions => initial_conditions(by_date), :order => order }}
+            base.named_scope :recent, lambda {|length_of_time| length_of_time ||= 1.year; recent_options(length_of_time) }
+            base.named_scope :between, lambda {|start_date, end_date| { :conditions => between_conditions(start_date, end_date), :order => order }}
+          else
+            base.extend WithScopeMethods
+          end
         end
-
-        module ClassMethods
+        
+        module WithScopeMethods
           def by_date(by_date, options ={})
             with_scope(:find => {:conditions => initial_conditions(by_date), :order => order}) do
               block_given? ? yield(options) : find(:all, options)
             end
           end
 
-          def count_by_date(by_date, options = {})
-            with_scope(:find => {:conditions => initial_conditions(by_date)}) do
-              count(options)
+          def recent(length_of_time = 1.year, options = {})
+            with_scope(:find => recent_options(length_of_time)) do
+              block_given? ? yield(options) : find(:all, options)
             end
           end
 
+          def between(start_date, end_date, options = {})
+            with_scope(:find => {:conditions => between_conditions(start_date, end_date), :order => order}) do
+              block_given? ? yield(options) : find(:all, options)
+            end
+          end
+        end
+        
+        module ClassMethods
           def oldest(options = {})
             find(:first, options.merge(:order => "#{table_name}.#{archivable_attribute} ASC"))
           end
@@ -77,22 +92,16 @@ module Shooter #:nodoc:
           def newest(options = {})
             find(:first, options.merge(:order => "#{table_name}.#{archivable_attribute} DESC"))
           end
-
-          def recent(length_of_time = 1.year, options = {})
-            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -length_of_time.to_days)], :order => "#{table_name}.#{archivable_attribute} DESC"}) do
-              block_given? ? yield(options) : find(:all, options)
-            end
-          end
-
-          def count_recent(length_of_time = 1.year, options = {})
-            with_scope(:find => {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -length_of_time.to_days)], :order => "#{table_name}.#{archivable_attribute} DESC"}) do
+          
+          def count_by_date(by_date, options = {})
+            with_scope(:find => {:conditions => initial_conditions(by_date)}) do
               count(options)
             end
           end
 
-          def between(start_date, end_date, options = {})
-            with_scope(:find => {:conditions => between_conditions(start_date, end_date), :order => order}) do
-              block_given? ? yield(options) : find(:all, options)
+          def count_recent(length_of_time = 1.year, options = {})
+            with_scope(:find => recent_options(length_of_time)) do
+              count(options)
             end
           end
 
@@ -118,7 +127,11 @@ module Shooter #:nodoc:
             start_date, end_date = simple_parse(start_date), simple_parse(end_date)
             ["#{table_name}.#{archivable_attribute} BETWEEN ? AND ?", start_date, end_date]
           end
-
+          
+          def recent_options(length_of_time)
+            {:conditions => ["#{table_name}.#{archivable_attribute} >= ?", Time.now.advance(:days => -length_of_time.to_days)], :order => "#{table_name}.#{archivable_attribute} DESC"}
+          end
+          
           def order
             "#{table_name}.#{archivable_attribute} #{sort_order}"
           end
@@ -140,8 +153,8 @@ module Shooter #:nodoc:
   end
 end
 
-class Integer
+class Numeric
   def to_days
-    self/60/60/24
+    self.to_i/60/60/24
   end
 end
