@@ -56,13 +56,16 @@ module Shooter #:nodoc:
         def self.included(base)
           base.extend ClassMethods
           if base.respond_to?(:named_scope)
-            base.named_scope :by_date, lambda {|by_date| { :conditions => initial_conditions(by_date), :order => order }}
-            base.named_scope :recent, lambda {|length_of_time| length_of_time ||= 1.year; recent_options(length_of_time) }
-            base.named_scope :between, lambda {|start_date, end_date| { :conditions => between_conditions(start_date, end_date), :order => order }}
+            base.class_eval do
+              named_scope :by_date, lambda {|by_date| { :conditions => initial_conditions(by_date), :order => order }}
+              named_scope :recent, lambda {|*length_of_time| length_of_time = length_of_time.blank? ? 1.year: length_of_time; recent_options(length_of_time) }
+              named_scope :between, lambda {|start_date, end_date| { :conditions => between_conditions(start_date, end_date), :order => order }}
+            end
           else
             base.extend WithScopeMethods
           end
         end
+        
         
         module WithScopeMethods
           def by_date(by_date, options ={})
